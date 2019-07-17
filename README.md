@@ -1,0 +1,3 @@
+# Dependencies
+- python-dotenv
+- telethon
