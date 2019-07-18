@@ -105,3 +105,7 @@ venv.bak/
 
 # telethon session file
 bot_session.session
+bot_session.session-journal
+
+#vs code settings
+.vscode/
