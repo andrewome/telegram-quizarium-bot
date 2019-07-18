@@ -1,8 +1,11 @@
 import os
 import logging
+from quizarium.QuizariumGameInstance import QuizariumGameInstance
+from store import Store
 from dotenv import load_dotenv
 from telethon import TelegramClient, sync, events
 from telethon.tl.types import PeerUser, PeerChannel, PeerChat
+from telethon.tl.custom import Message
 
 # Get constants
 load_dotenv()
@@ -20,11 +23,17 @@ client = TelegramClient(SESSION_NAME, API, APIHASH)
 # Local storage
 channels_to_respond = set()
 self_id = None
+store = Store("./store.json")
+store.load()
+quizariumInstances = {}
 
 @client.on(events.NewMessage)
 async def handler(event):
+    global self_id, channels_to_respond, store
+    messageObj = event.message
+
     # Get chat id
-    peer = event.message.to_id
+    peer = messageObj.to_id
     if isinstance(peer, PeerChannel):
         chat_id = peer.channel_id
     if isinstance(peer, PeerUser):
@@ -33,22 +42,27 @@ async def handler(event):
         chat_id = peer.chat_id
 
     # Respond to chat events
-    msg = event.message.message
-    client = event.client
-    if msg == "+respondtochannel":
+    msg = messageObj.message
+
+    # Get self_id if does not exist
+    if self_id == None:
+        client = event.client
         user = await client.get_me()
         self_id = user.id
+    
+    # Handle command
+    if msg == "+respondtochannel":
         if event.from_id == self_id:
             channels_to_respond.add(chat_id)
-            print(channels_to_respond)
             await event.reply("Responding to this channel!")
-                
-    if event.from_id == QUIZARIUM_BOT_ID and chat_id in channels_to_respond:
-        messageObj = event.message
-        msg = messageObj.message
-        await messageObj.reply("Hello quizarium bawt")
-        print(msg)
 
+    # If from quizarium and inside channels that are given green light to respond to.
+    if event.from_id == QUIZARIUM_BOT_ID and chat_id in channels_to_respond:
+        if chat_id not in quizariumInstances:
+            quizariumInstances[chat_id] = QuizariumGameInstance()
+        await quizariumInstances[chat_id].parse(msg, store, messageObj)
+        await messageObj.reply("Hello quizarium bawt")
+        
 client.start()
 print("Started!")
 client.run_until_disconnected()
