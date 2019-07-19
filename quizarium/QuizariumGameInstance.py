@@ -19,6 +19,8 @@ class QuizariumGameInstance:
                 answer = store.get(self.curQuestion)
                 print(f"Answering {self.curQuestion}: {answer}")
                 await messageObj.reply(answer)
+            else:
+                await messageObj.reply("/next")
             return
         
         result = re.match(middleOfQnRegEx, message)
@@ -44,4 +46,5 @@ class QuizariumGameInstance:
             if self.curQuestion != None:
                 if not store.exists(self.curQuestion):
                     store.add(self.curQuestion, answer)
+            self.curQuestion = None
             return

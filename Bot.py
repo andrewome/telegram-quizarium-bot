@@ -61,7 +61,6 @@ async def handler(event):
         if chat_id not in quizariumInstances:
             quizariumInstances[chat_id] = QuizariumGameInstance()
         await quizariumInstances[chat_id].parse(msg, store, messageObj)
-        await messageObj.reply("Hello quizarium bawt")
         
 client.start()
 print("Started!")
